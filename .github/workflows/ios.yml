@@ -108,7 +108,7 @@ jobs:
 
       - name: Verify archive structure
         run: |
-          APP="build/RcloneGUI-CI.xcarchive/Products/Applications/Rclone GUI.app"
+          APP="build/RcloneGUI-CI.xcarchive/Products/Applications/RcloneGUI.app"
           if [ ! -d "$APP" ]; then
             echo "ERROR: archive missing the .app bundle"
             ls -la "build/RcloneGUI-CI.xcarchive/Products/Applications/" || true
