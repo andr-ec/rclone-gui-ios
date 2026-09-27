@@ -91,7 +91,7 @@ jobs:
         run: |
           ./scripts/build-rclone.sh
 
-      - name: Build generic iOS device archive (ad-hoc signature, no Apple certificate)
+      - name: Build generic iOS device archive (unsigned)
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -100,9 +100,23 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/RcloneGUI-CI.xcarchive \
-            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="-"
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
+
+      - name: Add ad-hoc signature for entitlement preservation
+        run: |
+          set -euo pipefail
+          APP="build/RcloneGUI-CI.xcarchive/Products/Applications/RcloneGUI.app"
+          sign() { codesign --force --sign - --timestamp=none "$1"; }
+          find "$APP/Frameworks" -type f -perm -111 -exec sign {} \; 2>/dev/null || true
+          find "$APP/PlugIns" -type f -perm -111 -exec sign {} \; 2>/dev/null || true
+          find "$APP/PlugIns" -type d -name '*.appex' -prune -exec sign {} \;
+          codesign --force --sign - --timestamp=none \
+            --entitlements "Rclone GUI/Rclone GUI.entitlements" "$APP"
+          codesign --display --entitlements :- "$APP" || true
 
       - name: Verify archive structure
         run: |
