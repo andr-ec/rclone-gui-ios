@@ -91,7 +91,7 @@ jobs:
         run: |
           ./scripts/build-rclone.sh
 
-      - name: Build generic iOS device archive (no signing)
+      - name: Build generic iOS device archive (ad-hoc signature, no Apple certificate)
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -100,11 +100,9 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/RcloneGUI-CI.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_ALLOWED=YES \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            CODE_SIGN_IDENTITY="-"
 
       - name: Verify archive structure
         run: |
