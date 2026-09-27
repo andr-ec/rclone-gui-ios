@@ -64,8 +64,7 @@ jobs:
   archive-dry-run:
     name: Archive (dry run, unsigned)
     runs-on: macos-15
-    timeout-minutes: 25
-    needs: build-and-test
+    timeout-minutes: 60
 
     env:
       PROJECT: Rclone GUI.xcodeproj
@@ -74,6 +73,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build RcloneKit.xcframework (gomobile, ~20min)
+        run: |
+          brew install gomobile golang-misc 2>/dev/null || true
+          ./scripts/build-rclone.sh
 
       - name: Build generic iOS device archive (no signing)
         run: |
@@ -100,6 +109,12 @@ jobs:
           fi
           echo "Archive structure OK"
           du -sh "build/RcloneGUI-CI.xcarchive"
+
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RcloneGUI-unsigned-xcarchive
+          path: build/RcloneGUI-CI.xcarchive
 
   build-macos:
     name: Build (macOS, unsigned)
