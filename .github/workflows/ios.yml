@@ -110,13 +110,40 @@ jobs:
         run: |
           set -euo pipefail
           APP="build/RcloneGUI-CI.xcarchive/Products/Applications/RcloneGUI.app"
-          sign() { codesign --force --sign - --timestamp=none "$1"; }
-          find "$APP/Frameworks" -type f -perm -111 -exec sign {} \; 2>/dev/null || true
-          find "$APP/PlugIns" -type f -perm -111 -exec sign {} \; 2>/dev/null || true
-          find "$APP/PlugIns" -type d -name '*.appex' -prune -exec sign {} \;
-          codesign --force --sign - --timestamp=none \
-            --entitlements "Rclone GUI/Rclone GUI.entitlements" "$APP"
+          TMP="$(mktemp -d)"
+          expand_entitlements() {
+            sed \
+              -e 's/\$(AppIdentifierPrefix)/0000000000./g' \
+              -e 's/\$(TeamIdentifierPrefix)/0000000000./g' \
+              "$1" > "$2"
+          }
+          sign_plain() { codesign --force --sign - --timestamp=none "$1"; }
+          sign_with() { codesign --force --sign - --timestamp=none --entitlements "$2" "$1"; }
+
+          # Sign nested framework binaries first.
+          while IFS= read -r -d '' binary; do sign_plain "$binary"; done < <(
+            find "$APP/Frameworks" -type f -perm -111 -print0
+          )
+
+          # Sign each extension independently with its target's entitlements.
+          while IFS= read -r -d '' appex; do
+            while IFS= read -r -d '' binary; do sign_plain "$binary"; done < <(
+              find "$appex" -type f -perm -111 -print0
+            )
+            case "$(basename "$appex")" in
+              RcloneFileProvider.appex)
+                expand_entitlements "RcloneFileProvider/RcloneFileProvider.entitlements" "$TMP/fileprovider.plist"
+                sign_with "$appex" "$TMP/fileprovider.plist" ;;
+              *) sign_plain "$appex" ;;
+            esac
+          done < <(find "$APP/PlugIns" -type d -name '*.appex' -prune -print0)
+
+          expand_entitlements "Rclone GUI/Rclone GUI.entitlements" "$TMP/main.plist"
+          sign_with "$APP" "$TMP/main.plist"
           codesign --display --entitlements :- "$APP" || true
+          for appex in "$APP"/PlugIns/*.appex; do
+            codesign --display --entitlements :- "$appex" || true
+          done
 
       - name: Verify archive structure
         run: |
