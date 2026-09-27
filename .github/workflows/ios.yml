@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build & test (iOS Simulator)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 25
 
     env:
@@ -37,6 +37,14 @@ jobs:
           xcodebuild -resolvePackageDependencies \
             -project "$PROJECT" \
             -scheme "$SCHEME"
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build RcloneKit.xcframework (gomobile)
+        run: ./scripts/build-rclone.sh
 
       - name: Build for testing
         run: |
@@ -63,7 +71,7 @@ jobs:
 
   archive-dry-run:
     name: Archive (dry run, unsigned)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
 
     env:
@@ -81,7 +89,6 @@ jobs:
 
       - name: Build RcloneKit.xcframework (gomobile, ~20min)
         run: |
-          brew install gomobile golang-misc 2>/dev/null || true
           ./scripts/build-rclone.sh
 
       - name: Build generic iOS device archive (no signing)
@@ -123,7 +130,7 @@ jobs:
     # textInputAutocapitalization, UIPasteboard, UIActivityViewController) ne
     # cassaient donc qu'à l'archive macOS Xcode Cloud. Ce job compile la cible
     # macOS à chaque PR pour attraper ces régressions plus tôt.
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 25
 
     env:
@@ -133,6 +140,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build RcloneKit.xcframework (gomobile)
+        run: ./scripts/build-rclone.sh
 
       - name: Build for macOS (compile check, no signing)
         run: |
@@ -150,7 +165,7 @@ jobs:
 
   transparency-guard:
     name: Glass Engine — garde « 0 appel maison »
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 5
 
     steps:
@@ -166,7 +181,7 @@ jobs:
     # ne bloque pas les PR. Le mainteneur régénère le manifeste via
     # `scripts/verify-reproducible.sh --record` après un build propre.
     if: github.event_name == 'workflow_dispatch'
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
 
     steps:
