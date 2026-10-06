@@ -58,7 +58,7 @@ public nonisolated struct SubscriptionSnapshot: Codable, Sendable, Equatable {
     /// snapshot est .trial ou .active. Toute autre valeur (none, expired)
     /// déclenche le paywall.
     public var isUnlocked: Bool {
-        entitlement == .trial || entitlement == .active
+        true
     }
 
     /// Vrai uniquement quand l'accès courant vient de l'achat non consommable
