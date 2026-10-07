@@ -372,6 +372,8 @@ actor RcloneProviderClient {
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         if status == errSecItemNotFound { return nil }
+        // Shared group not provisioned for this signature: fall back to the default group.
+        if status == errSecMissingEntitlement, accessGroup != nil { return nil }
         guard status == errSecSuccess, let data = item as? Data else {
             throw providerError("Keychain read failed (OSStatus \(status))")
         }

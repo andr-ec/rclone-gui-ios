@@ -17,8 +17,6 @@
 	<string>Pour scanner un QR code lors d'un Handoff P2P. Aucune image n'est capturée ni stockée — le flux vidéo est analysé en local et jeté immédiatement.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Permet d'uploader vos photos et vidéos vers vos remotes rclone.</string>
-	<key>RcloneKeychainAccessGroup</key>
-	<string>$(DEVELOPMENT_TEAM).com.rougetet.rclone-gui</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.rougetet.rclone-gui.transfer-resume</string>

@@ -21,14 +21,9 @@ public enum AppGroup {
     public nonisolated static let identifier = "group.com.rougetet.rclone-gui"
 
     /// Keychain access group for credentials shared between app and extension.
-    public nonisolated static var keychainAccessGroup: String? {
-        guard let value = Bundle.main.object(forInfoDictionaryKey: "RcloneKeychainAccessGroup") as? String,
-              !value.isEmpty,
-              !value.contains("$(") else {
-            return nil
-        }
-        return value
-    }
+    /// `nil` selects the process default group (first `keychain-access-groups`
+    /// entry), which stays valid when the app is re-signed under another team.
+    public nonisolated static var keychainAccessGroup: String? { nil }
 
     /// URL of the App Group container.
     /// Falls back to the app's own `Application Support` directory if the

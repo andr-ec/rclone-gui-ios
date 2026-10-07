@@ -73,14 +73,9 @@ public enum FileProviderBridge {
             .appending(path: "RcloneFileProvider", directoryHint: .isDirectory)
     }
 
-    public static var keychainAccessGroup: String? {
-        guard let value = Bundle.main.object(forInfoDictionaryKey: "RcloneKeychainAccessGroup") as? String,
-              !value.isEmpty,
-              !value.contains("$(") else {
-            return nil
-        }
-        return value
-    }
+    /// `nil` selects the process default group (first `keychain-access-groups`
+    /// entry), matching `AppGroup.keychainAccessGroup` in the main app.
+    public static var keychainAccessGroup: String? { nil }
 
     public static var manifestURL: URL {
         containerURL.appending(path: "manifest", directoryHint: .isDirectory)

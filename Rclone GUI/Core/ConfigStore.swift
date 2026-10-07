@@ -226,7 +226,9 @@ public actor ConfigStore {
                 return shared
             }
             if let legacy = try fetchMasterKeyData(accessGroup: nil) {
-                try storeMasterKeyData(legacy, accessGroup: sharedGroup)
+                // Best-effort copy, like the write path: the shared group may
+                // not be provisioned (errSecMissingEntitlement).
+                try? storeMasterKeyData(legacy, accessGroup: sharedGroup)
                 return legacy
             }
             return nil
@@ -246,6 +248,10 @@ public actor ConfigStore {
         case errSecSuccess:
             return item as? Data
         case errSecItemNotFound:
+            return nil
+        case errSecMissingEntitlement where accessGroup != nil:
+            // Shared group not provisioned for this signature: fall back
+            // to the default group, mirroring storeMasterKeyData.
             return nil
         default:
             throw RcloneError.engineNotAvailable("Keychain read failed (OSStatus \(status))")
